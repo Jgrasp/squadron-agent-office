@@ -2,7 +2,7 @@
   "id": "agent-office",
   "version": "0.1.0",
   "api": 1,
-  "squadron": ">=0.51.0",
+  "squadron": ">=0.50.0",
   "name": { "en": "Agent Office", "fr": "Agent Office" },
   "description": {
     "en": "Your agents at work in an isometric office: one room per project, their state live, and Claude's limits on a status wall",
