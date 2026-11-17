@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Agent Office</title>
+<link rel="stylesheet" href="/_squadron/kit.css">
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+<div class="panel" id="root">
+  <div class="bar">
+    <button class="cb" id="layBtn"><svg class="star" width="12" height="12" viewBox="0 0 12 12"><path d="M6 1.2l1.45 3 3.3.42-2.42 2.27.62 3.27L6 8.58 3.05 10.16l.62-3.27L1.25 4.62l3.3-.42z"/></svg><span id="seed"></span><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2.5 4l2.5 2.5L7.5 4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+    <button class="cb" id="regen"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 6a4 4 0 1 1-1.2-2.85"/><path d="M9.2 1.4v2.1H7.1"/></svg><span data-t="newLayout"></span></button>
+    <div class="laymenu" id="layMenu"></div>
+  </div>
+  <div class="stage" id="stage">
+    <div class="hint" data-t="hint"></div>
+    <div class="veil" id="veil"><p></p></div>
+    <div class="loader on" id="loader"><div class="ld">
+      <svg class="ld-ico" width="44" height="40" viewBox="0 0 44 40"><g class="b1"><path d="M4 26l10-5 10 5-10 5z" fill="var(--text-muted)"/><path d="M4 26v6l10 5v-6z" fill="var(--surface-3)"/><path d="M24 26v6l-10 5v-6z" fill="var(--border-focus)"/></g><g class="b2"><path d="M20 18l10-5 10 5-10 5z" fill="var(--text-muted)"/><path d="M20 18v12l10 5V23z" fill="var(--surface-3)"/><path d="M40 18v12l-10 5V23z" fill="var(--border-focus)"/></g><g class="b3"><path d="M12 10l8-4 8 4-8 4z" fill="var(--text)"/><path d="M12 10v8l8 4v-8z" fill="var(--surface-3)"/><path d="M28 10v8l-8 4v-8z" fill="var(--border-focus)"/></g></svg>
+      <div class="ld-t" data-t="building"></div>
+      <div class="ld-s" id="ldStep"></div>
+      <div class="ld-bar"><div id="ldFill"></div></div>
+      <div class="ld-seed" id="ldSeed"></div>
+    </div></div>
+    <div class="zoom"><button data-z="wall"><i class="dot" id="wallDot"></i><span data-t="wall"></span></button><button data-z="out" data-tt="zoomOut">−</button><button data-z="in" data-tt="zoomIn">+</button><button data-z="fit" data-t="fit"></button></div>
+  </div>
+  <div class="statusbar" id="statusbar"></div>
+  <div class="inspector" id="inspector"></div>
+</div>
+<script src="i18n.js"></script>
+<script src="vendor/pixi.min.js"></script>
+<script src="vendor/unsafe-eval.min.js"></script>
+<script src="sprites.js"></script>
+<script src="pixi-svg.js"></script>
+<script src="office.js"></script>
+<script src="live.js"></script>
+</body>
+</html>
