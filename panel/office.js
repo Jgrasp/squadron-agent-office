@@ -1326,6 +1326,9 @@ async function construct(seed, o = {}) {
   ready = true; constructing = false; dirty = true;
   refreshUI();
   showSeed();
+  const veil = document.getElementById('veil');
+  veil.querySelector('p').textContent = Object.keys(PROJ).length ? '' : tr('empty');
+  veil.classList.toggle('on', !Object.keys(PROJ).length);
   if (!o.veiled && !o.quiet) await wait(Math.max(0, 450 - (performance.now() - t0)));
   ld.classList.remove('on');
 }
@@ -1336,13 +1339,13 @@ function checkRebuild(now) {
 async function rebuild() {
   wantRebuild = false;
   const veil = document.getElementById('veil'), keep = selId, pos = insPos;
-  veil.querySelector('p').textContent = '';
+  if (Object.keys(PROJ).length) veil.querySelector('p').textContent = '';
   veil.classList.add('on');
   await wait(450);
   await construct(layoutSeed, { veiled: true, keepCam: true });
   if (keep && A[keep]) { selId = keep; if (pos) { insBox.style.left = pos.left + 'px'; insBox.style.top = pos.top + 'px'; } refreshInspector(); } else closeInspector();
   await wait(250);
-  veil.classList.remove('on');
+  if (Object.keys(PROJ).length) veil.classList.remove('on');
 }
 
 const loungeLabel = (keys) => keys.map((k) => tr(k)).join(' · ');

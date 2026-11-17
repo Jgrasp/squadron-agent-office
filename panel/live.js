@@ -81,11 +81,14 @@ function handle(m) {
 async function start(m) {
   if (started) return;
   started = true;
-  await themeReady();
-  await fontsReady();
   setProjects(m.projects || [], m.groups || []);
   (m.agents || []).forEach((ag) => { if (!ag.archived) AG[ag.id] = ag; });
   USAGE.value = m.usage || null;
+  const early = pending;
+  pending = [];
+  early.forEach(handle);
+  await themeReady();
+  await fontsReady();
   if (m.layouts) Object.assign(LAYS, { kept: m.layouts.kept || [], start: m.layouts.start ?? null });
   const v = m.resume && m.view && m.view.seed ? m.view : null;
   await initApp();
@@ -99,9 +102,6 @@ async function start(m) {
     }
   }
   saveView();
-  const queued = pending;
-  pending = [];
-  queued.forEach(handle);
 }
 
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = tr(el.dataset.t); });
