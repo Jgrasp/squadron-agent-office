@@ -25,7 +25,7 @@ Squadron hands the extension no conversation, prompt, tool input, folder or secr
 
 It runs no program and reaches no network. Its layouts, the camera and the selection stay in its own storage in Squadron.
 
-Needs Squadron 0.51.0 or later, the first release with extension API 1.7. Until it ships, `extension.json` accepts the 0.50.0 development builds of the API 1.7 branch; set `"squadron": ">=0.51.0"` before publishing.
+Needs Squadron 0.52.0 or later, the first release with extension API 1.7.
 
 ## Build
 
