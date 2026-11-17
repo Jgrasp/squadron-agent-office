@@ -8,6 +8,7 @@ const BURST: u32 = 24;
 const RELOAD_MS: u64 = 4000;
 const RESUME_MS: u64 = 20000;
 const RECHECK_S: u32 = 300;
+const STATUS_CHECK_MS: u64 = 5000;
 
 #[derive(Default)]
 struct Live {
@@ -17,6 +18,7 @@ struct Live {
     relayed: u32,
     stale: bool,
     layout: String,
+    checked: u64,
 }
 
 thread_local! {
@@ -224,6 +226,19 @@ fn relay(name: &str, data: &str) {
     post(&json!({ "type": "event", "name": name, "data": data }));
     if name == "agent.started" || name == "agent.archived" {
         check_layout(false);
+    } else if name == "agent.status" {
+        let t = now();
+        let due = LIVE.with(|l| {
+            let mut l = l.borrow_mut();
+            let due = t.saturating_sub(l.checked) >= STATUS_CHECK_MS;
+            if due {
+                l.checked = t;
+            }
+            due
+        });
+        if due {
+            check_layout(false);
+        }
     }
 }
 
