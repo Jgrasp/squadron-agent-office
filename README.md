@@ -4,7 +4,7 @@ A [Squadron](https://github.com/Jgrasp/squadron) extension that shows your agent
 
 ## Use
 
-Next to an agent, click **Agent Office** in its tools. The panel builds the office from your projects:
+Next to an agent, click **Agent Office** in its tools. The office opens full screen in its own window, F11 leaves full screen, and clicking the button again brings the window back to the front. It builds the office from your projects:
 
 - each project that had an agent over the last 7 days gets an office in its color, its name on a plate above the door. Its size follows the number of agents of the week: a booth for one, up to an open space from 20. Archived projects and projects without agents this week have none;
 - each group of projects fills one block of the building, sub-groups included. Small projects sometimes share an office;

@@ -12,7 +12,7 @@
   "wasm": "target/wasm32-wasip2/release/agent_office.wasm",
   "permissions": { "agents": ["activity", "show"], "projects": ["read"], "usage": ["read"] },
   "contributes": {
-    "panels": [{ "id": "main", "title": { "en": "Agent Office", "fr": "Agent Office" }, "page": "panel/index.html" }],
+    "panels": [{ "id": "main", "title": { "en": "Agent Office", "fr": "Agent Office" }, "page": "panel/index.html", "window": "fullscreen" }],
     "items": [
       {
         "slot": "agent.tools",
