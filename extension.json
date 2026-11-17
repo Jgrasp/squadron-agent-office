@@ -1,0 +1,27 @@
+{
+  "id": "agent-office",
+  "version": "0.1.0",
+  "api": 1,
+  "squadron": ">=0.51.0",
+  "name": { "en": "Agent Office", "fr": "Agent Office" },
+  "description": {
+    "en": "Your agents at work in an isometric office: one room per project, their state live, and Claude's limits on a status wall",
+    "fr": "Vos agents au travail dans un bureau isométrique : une pièce par projet, leur état en direct, et les limites de Claude sur un mur d’état"
+  },
+  "logo": "logo.svg",
+  "wasm": "target/wasm32-wasip2/release/agent_office.wasm",
+  "permissions": { "agents": ["activity", "show"], "projects": ["read"], "usage": ["read"] },
+  "contributes": {
+    "panels": [{ "id": "main", "title": { "en": "Agent Office", "fr": "Agent Office" }, "page": "panel/index.html" }],
+    "items": [
+      {
+        "slot": "agent.tools",
+        "id": "office",
+        "label": { "en": "Agent Office", "fr": "Agent Office" },
+        "hint": { "en": "Your agents at work, project by project", "fr": "Vos agents au travail, projet par projet" },
+        "icon": "logo",
+        "action": { "panel.open": "main" }
+      }
+    ]
+  }
+}
