@@ -129,7 +129,8 @@ fn ready() {
         let l = l.borrow();
         l.closed_at > 0 && t.saturating_sub(l.closed_at) < RELOAD_MS
     });
-    let shown = resume["at"].as_u64().is_some_and(|at| t.saturating_sub(at) < RESUME_MS);
+    let within = resume["within"].as_u64().unwrap_or(RESUME_MS);
+    let shown = resume["at"].as_u64().is_some_and(|at| t.saturating_sub(at) < within);
     store("resume", &Value::Null);
     let (p, g) = (projects(), groups());
     LIVE.with(|l| {
@@ -155,7 +156,6 @@ fn ready() {
 fn page(message: &Value) {
     match message["type"].as_str().unwrap_or("") {
         "ready" => ready(),
-        "log" => host::log(&format!("agent-office: {}", message["m"].as_str().unwrap_or(""))),
         "view" => store("view", &message["view"]),
         "layouts" => store("layouts", &message["layouts"]),
         "sync" => {
@@ -232,7 +232,10 @@ struct Office;
 impl Extension for Office {
     fn on_event(name: String, _agent: Option<Agent>, data: String) {
         match name.as_str() {
-            "started" => post(&json!({ "type": "reload" })),
+            "started" => {
+                store("resume", &json!({ "at": now(), "within": RELOAD_MS }));
+                post(&json!({ "type": "reload" }));
+            }
             "panel.message" => {
                 let v: Value = serde_json::from_str(&data).unwrap_or(Value::Null);
                 if v["panel"] == PANEL {

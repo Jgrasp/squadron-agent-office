@@ -579,18 +579,32 @@ function spotFree(id, me) {
   if (sp.kind === 'desk') return !AL.some((o) => o !== me && !o.gone && o.desk === id);
   return true;
 }
-function freeDesk(a) {
+function freeDesk(a, evict = true) {
   if (a.desk && !AL.some((o) => o !== a && !o.gone && o.desk === a.desk)) return a.desk;
-  return Object.values(SPOTS).find((s) => s.kind === 'desk' && s.p === a.project && spotFree(s.id, a))?.id || null;
+  const free = Object.values(SPOTS).find((s) => s.kind === 'desk' && s.p === a.project && spotFree(s.id, a))?.id;
+  if (free || !evict) return free || null;
+  const idle = AL.find((o) => o !== a && !o.gone && !o.leaving && o.project === a.project && o.desk && !BUSY.includes(o.status));
+  if (!idle) return null;
+  const desk = idle.desk, r = restSpot(idle, false);
+  idle.desk = null;
+  if (r) goTo(idle, r); else destroyActor(idle);
+  return desk;
 }
-function restSpot(a) {
+function claimDesks() {
+  AL.forEach((a) => {
+    if (a.gone || a.leaving || a.path || a.inAt != null || a.after || !BUSY.includes(a.status) || a.desk) return;
+    const d = freeDesk(a, false);
+    if (d) { a.desk = d; goTo(a, a.status === 'waiting' ? SPOTS[d].stand : d); }
+  });
+}
+function restSpot(a, allowDesk = true) {
   const p = a.project, L = roomOf(p) ? loungeOf(p) : null;
   const own = [`${p}.sofa0`, `${p}.sofa1`, `${p}.lie`, `${p}.bean`].filter((id) => SPOTS[id]);
   const inLounge = AL.filter((o) => o !== a && !o.gone && o.project === p && SPOTS[o.path ? o.target : o.spot]?.room?.type === 'lounge').length;
   const lounge = L && inLounge < 2 ? order(hashOf(layoutSeed, a.id), LOUNGE_KEYS).map((k) => `${L}.${k}`).filter((id) => SPOTS[id]) : [];
   const desks = Object.values(SPOTS).filter((s) => s.kind === 'desk' && s.p === p).map((s) => s.id);
-  const prefs = [own, lounge, desks], k = hashOf(layoutSeed, 'rest:' + a.id) % 3;
-  for (const list of [...prefs.slice(k), ...prefs.slice(0, k)]) {
+  const prefs = [own, lounge], k = hashOf(layoutSeed, 'rest:' + a.id) % 2;
+  for (const list of [...prefs.slice(k), ...prefs.slice(0, k), allowDesk ? desks : []]) {
     const id = list.find((sid) => spotFree(sid, a));
     if (id) return id;
   }
@@ -732,7 +746,7 @@ function transition(a, prev) {
   if (a.inAt != null) { a.home = homeFor(a) || a.home; return; }
   if (BUSY.includes(a.status)) {
     const d = freeDesk(a);
-    if (!d) return destroyActor(a);
+    if (!d) { a.desk = null; return; }
     a.desk = d;
     goTo(a, a.status === 'waiting' ? SPOTS[d].stand : d);
     if (prev === 'error' || (G.mode !== 'ok' && a.status === 'working')) a.cheer = 0;
@@ -740,9 +754,11 @@ function transition(a, prev) {
   }
   const at = SPOTS[a.path ? a.target : a.spot];
   if (at && (at.kind === 'desk' || at.kind === 'stand' || at.kind === 'visit')) {
-    const r = restSpot(a);
-    if (!r) return destroyActor(a);
-    goTo(a, r);
+    const r = restSpot(a, false);
+    if (r) return goTo(a, r);
+    const d = a.desk && !AL.some((o) => o !== a && o.desk === a.desk) ? a.desk : restSpot(a);
+    if (!d) return destroyActor(a);
+    goTo(a, d);
   }
 }
 function applyAgent(ag) {
@@ -780,7 +796,7 @@ function message(from, to) {
 
 let G = { mode: 'ok', api: 'ok', u5: null, uw: null, retry: 0 };
 const USAGE = { value: null };
-const hhmm = (ms) => new Date(ms).toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit' });
+const hhmm = (ms) => new Date(ms).toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 const wday = (ms) => new Date(ms).toLocaleDateString(LANG, { weekday: 'short' }).replace(/\.$/, '');
 function globalState() {
   const u = USAGE.value;
@@ -1069,7 +1085,9 @@ function frameBox(b, animate = true, pad = 0.96, max = 4) {
   const s = Math.max(0.35, Math.min(max, Math.min(w / (b.X1 - b.X0), r.height / (b.Y1 - b.Y0)) * pad));
   flyTo({ s, tx: w / 2 - s * (b.X0 + b.X1) / 2, ty: r.height / 2 - s * (b.Y0 + b.Y1) / 2 }, animate);
 }
-const fit = (animate) => frameBox(bounds(-1, -1, LW + 3, BOT + LOBBY_D + 1), animate, 1);
+let autoFit = false;
+const fit = (animate) => { autoFit = true; frameBox(bounds(-1, -1, LW + 3, BOT + LOBBY_D + 1), animate, 1); };
+const userCam = () => { autoFit = false; };
 let fly = null;
 function flyTo(target, animate = true) {
   if (!animate) { Object.assign(cam, target); applyCam(); return; }
@@ -1091,6 +1109,7 @@ function viewNow() {
   return { seed: layoutSeed, cx: (r.width / 2 - cam.tx) / cam.s, cy: (r.height / 2 - cam.ty) / cam.s, s: cam.s, sel: selId };
 }
 function restoreView(v) {
+  autoFit = false;
   const r = stage.getBoundingClientRect();
   flyTo({ s: v.s, tx: r.width / 2 - v.s * v.cx, ty: r.height / 2 - v.s * v.cy }, false);
 }
@@ -1163,6 +1182,7 @@ let drag = null;
 stage.addEventListener('pointerdown', (e) => {
   if (e.target.closest('.zoom')) return;
   drag = { x: e.clientX, y: e.clientY, tx: cam.tx, ty: cam.ty, moved: false };
+  userCam();
   stage.setPointerCapture(e.pointerId);
 });
 stage.addEventListener('pointermove', (e) => {
@@ -1188,12 +1208,13 @@ stage.addEventListener('pointerup', (e) => {
 });
 stage.addEventListener('dblclick', (e) => {
   if (e.target.closest('.zoom') || !ready) return;
+  userCam();
   const [x, y] = floorAt(e), lz = zoneAt(x, y);
   if (lz.wall && y < lz.y0 + 1.2) return focusWall(lz);
   focusZone(lz);
 });
 stage.addEventListener('wheel', (e) => {
-  e.preventDefault(); fly = null;
+  e.preventDefault(); fly = null; userCam();
   const r = stage.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
   const s = Math.max(0.35, Math.min(4, cam.s * Math.exp(-e.deltaY * 0.0015)));
   cam.tx = mx - (mx - cam.tx) * s / cam.s; cam.ty = my - (my - cam.ty) * s / cam.s; cam.s = s; applyCam();
@@ -1202,6 +1223,7 @@ document.querySelector('.zoom').addEventListener('click', (e) => {
   const z = e.target.closest('button')?.dataset.z;
   if (!z || !ready) return;
   if (z === 'fit') return fit(true);
+  userCam();
   if (z === 'wall') return focusWall();
   const r = stage.getBoundingClientRect(), s = Math.max(0.35, Math.min(4, cam.s * (z === 'in' ? 1.3 : 1 / 1.3)));
   flyTo({ s, tx: r.width / 2 - (r.width / 2 - cam.tx) * s / cam.s, ty: r.height / 2 - (r.height / 2 - cam.ty) * s / cam.s });
@@ -1236,7 +1258,7 @@ function frame(now) {
   LOUNGES.filter((z) => z.wall).forEach((z) => { if (z.wkey !== wk) { z.wkey = wk; drawWall(g, z); } });
   AL.forEach((a) => stepActor(a, rdt));
   AL.forEach((a) => renderActor(a));
-  if (frameN++ % 3 === 0) { refreshScreens(g.mode); refreshUI(); }
+  if (frameN++ % 3 === 0) { claimDesks(); refreshScreens(g.mode); refreshUI(); }
   if (frameN % 6 === 0 && insBox.classList.contains('on')) refreshInspector();
   renderBall();
   renderReception();
@@ -1323,16 +1345,14 @@ async function rebuild() {
   veil.classList.remove('on');
 }
 
-function loungeLabel() {
-  return LOUNGES.map((z) => tr(z.center)).join(' · ');
-}
+const loungeLabel = (keys) => keys.map((k) => tr(k)).join(' · ');
 function showSeed() {
   const kept = LAYS.kept.some((o) => o.seed === layoutSeed);
   document.getElementById('seed').textContent = `#${layoutSeed}`;
   document.getElementById('layBtn').classList.toggle('kept', kept);
   document.getElementById('layMenu').innerHTML = `<div class="lm-h">${tr('atStart')}</div>
     <button class="lm-i" data-start="" aria-checked="${LAYS.start == null}"><i></i>${tr('newEachTime')}</button>
-    ${LAYS.kept.map((o) => `<div class="lm-row"><button class="lm-i" data-start="${o.seed}" aria-checked="${LAYS.start === o.seed}"><i></i>#${o.seed}<span>${esc(o.label)}</span></button><button class="lm-x" data-del="${o.seed}" title="${esc(tr('forget'))}">×</button></div>`).join('')}
+    ${LAYS.kept.map((o) => `<div class="lm-row"><button class="lm-i" data-start="${o.seed}" aria-checked="${LAYS.start === o.seed}"><i></i>#${o.seed}<span>${esc(loungeLabel(o.lounges || []))}</span></button><button class="lm-x" data-del="${o.seed}" title="${esc(tr('forget'))}">×</button></div>`).join('')}
     <div class="lm-sep"></div>
     <button class="lm-i lm-keep" data-keep ${kept ? 'disabled' : ''}>${kept ? tr('kept', layoutSeed) : tr('keep', layoutSeed)}</button>`;
 }
@@ -1347,7 +1367,7 @@ document.getElementById('layMenu').addEventListener('click', (e) => {
     LAYS.kept = LAYS.kept.filter((o) => o.seed !== k);
     if (LAYS.start === k) LAYS.start = null;
   } else if (t.hasAttribute('data-keep')) {
-    LAYS.kept.push({ seed: layoutSeed, label: loungeLabel() });
+    LAYS.kept.push({ seed: layoutSeed, lounges: LOUNGES.map((z) => z.center) });
     LAYS.start = layoutSeed;
   } else if (t.dataset.start != null) {
     LAYS.start = t.dataset.start === '' ? null : +t.dataset.start;
@@ -1360,7 +1380,7 @@ document.getElementById('regen').addEventListener('click', () => { if (!construc
 
 async function initApp() {
   app = new PIXI.Application();
-  await app.init({ preference: 'webgl', resizeTo: stage, backgroundAlpha: 0, antialias: false, autoStart: false, resolution: Math.min(2, devicePixelRatio || 1), autoDensity: true });
+  await app.init({ preference: 'webgl', resizeTo: stage, backgroundAlpha: 0, antialias: false, autoStart: false, resolution: Math.min(1.5, devicePixelRatio || 1), autoDensity: true });
   PIXI.Ticker.system.stop();
   PIXI.Ticker.shared.stop();
   app.stage.eventMode = 'none';
@@ -1369,6 +1389,6 @@ async function initApp() {
   baseL = world.addChild(new PIXI.Container());
   zonesL = world.addChild(new PIXI.Container());
   tagsL = world.addChild(new PIXI.Container());
-  new ResizeObserver(() => { dirty = true; }).observe(stage);
+  new ResizeObserver(() => { dirty = true; if (autoFit && ready && !fly) requestAnimationFrame(() => fit(false)); }).observe(stage);
   loop();
 }
