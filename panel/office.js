@@ -684,9 +684,10 @@ function drawTag(a) {
   a.drawn = a.tagKey;
   tagVis(a);
 }
+const flagged = (a) => a.status === 'waiting' || !!a.err;
 function tagVis(a) {
-  const far = cam.s < 1.35, near = cam.s >= 1.9, calm = a.status !== 'waiting' && a.status !== 'error';
-  a.nt.alpha = +!(far && calm);
+  const near = cam.s >= 1.9;
+  a.nt.alpha = +(flagged(a) && !a.path);
   a.short.alpha = +!near; a.full.alpha = +near;
 }
 
@@ -1004,9 +1005,10 @@ function renderActor(a) {
   a.halo.alpha = ha;
   a.depth = x + y + (a.path ? 0 : s.bias || 0);
   place(a.c, x, y, a.depth);
-  a.tag.position.set(X, TY - poseHeight(r.pose));
-  const calm = a.status !== 'waiting' && a.status !== 'error';
-  if (a.calm !== calm) { a.calm = calm; tagVis(a); }
+  const R = app.renderer.resolution, snap = (v, t) => (Math.round((v * cam.s + t) * R) / R - t) / cam.s;
+  a.tag.position.set(snap(X, cam.tx), snap(TY - poseHeight(r.pose), cam.ty));
+  const tk = `${flagged(a)}${!!a.path}`;
+  if (a.tk !== tk) { a.tk = tk; tagVis(a); }
   const bkey = (r.bub || '') + (r.txt || '');
   if (a.bkey !== bkey) { a.bkey = bkey; clear(a.bb); a.breg = null; if (r.bub) { a.breg = {}; a.bb.addChild(svgToPixi(bubble(r.bub, r.txt), { reg: a.breg, keep: ANIM, bitmap: true })); } }
   const anim = a.breg && ANIM.some((k) => a.breg['.' + k]);
