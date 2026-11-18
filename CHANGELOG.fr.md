@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 0.2.0 · non publiée
+
+- Le bureau s’ouvre tout seul au démarrage de Squadron ; désactivez-le dans Réglages › Extensions › Agent Office
+- Le bouton Agent Office quitte les outils de l’agent : rouvrez le bureau depuis ses réglages, qui montrent s’il est ouvert et ce que font vos agents
+
 ## 0.1.0 · 2026-11-17
 
 - Première version : vos agents au travail dans un bureau isométrique, une pièce par projet et un bloc par groupe, en direct, dans une fenêtre flottante à part

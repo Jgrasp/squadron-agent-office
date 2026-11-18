@@ -1,8 +1,8 @@
 {
   "id": "agent-office",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "api": 1,
-  "squadron": ">=0.52.0",
+  "squadron": ">=0.54.0",
   "name": { "en": "Agent Office", "fr": "Agent Office" },
   "description": {
     "en": "Your agents at work in an isometric office: one room per project, their state live, and Claude's limits on a status wall",
@@ -13,15 +13,21 @@
   "permissions": { "agents": ["activity", "show"], "projects": ["read"], "usage": ["read"] },
   "contributes": {
     "panels": [{ "id": "main", "title": { "en": "Agent Office", "fr": "Agent Office" }, "page": "panel/index.html", "window": "floating" }],
-    "items": [
-      {
-        "slot": "agent.tools",
-        "id": "office",
-        "label": { "en": "Agent Office", "fr": "Agent Office" },
-        "hint": { "en": "Your agents at work, project by project", "fr": "Vos agents au travail, projet par projet" },
-        "icon": "logo",
-        "action": { "panel.open": "main" }
-      }
-    ]
+    "settings": {
+      "options": [
+        {
+          "id": "at-startup",
+          "label": { "en": "Open when Squadron starts", "fr": "Ouvrir au démarrage de Squadron" },
+          "hint": {
+            "en": "The office opens in its own window each time you launch Squadron.",
+            "fr": "Le bureau s’ouvre dans sa fenêtre à chaque lancement de Squadron."
+          },
+          "kind": "toggle",
+          "default": true
+        }
+      ],
+      "page": "settings/index.html",
+      "title": { "en": "Office window", "fr": "Fenêtre du bureau" }
+    }
   }
 }

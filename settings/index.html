@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Agent Office</title>
+<link rel="stylesheet" href="/_squadron/kit.css">
+<link rel="stylesheet" href="settings.css">
+</head>
+<body>
+<div class="card" id="card">
+  <div class="thumb">
+    <svg width="140" height="90" viewBox="0 0 140 90">
+      <path d="M20 50l30-15 30 15-30 15z" fill="var(--surface-3)"/>
+      <path d="M20 50v8l30 15v-8z" fill="var(--surface-2)"/><path d="M80 50v8l-30 15v-8z" fill="var(--surface-1)"/>
+      <path d="M60 40l30-15 30 15-30 15z" fill="var(--surface-3)"/>
+      <path d="M60 40v8l30 15v-8z" fill="var(--surface-2)"/><path d="M120 40v8l-30 15v-8z" fill="var(--surface-1)"/>
+      <g class="people"><circle cx="44" cy="47" r="3" fill="var(--text-muted)"/><circle cx="56" cy="51" r="3" fill="var(--text-muted)"/>
+      <circle cx="86" cy="37" r="3" fill="var(--text-muted)"/><circle cx="96" cy="41" r="3" fill="var(--accent)"/></g>
+    </svg>
+  </div>
+  <div class="body">
+    <strong><span class="dot"></span><span id="state"></span></strong>
+    <div class="stats" id="stats"></div>
+    <small class="err" id="err"></small>
+  </div>
+  <div class="act">
+    <button id="open"></button>
+    <small id="when"></small>
+  </div>
+</div>
+<script src="settings.js"></script>
+</body>
+</html>
