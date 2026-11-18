@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const PANEL: &str = "main";
+const AT_STARTUP: &str = "at-startup";
 const BURST: u32 = 24;
 const RELOAD_MS: u64 = 4000;
 const RESUME_MS: u64 = 20000;
@@ -19,6 +20,7 @@ struct Live {
     stale: bool,
     layout: String,
     checked: u64,
+    told: u64,
 }
 
 thread_local! {
@@ -153,6 +155,49 @@ fn ready() {
         "now": t,
     }));
     host::set_timer(RECHECK_S);
+    tell();
+}
+
+fn status() -> Value {
+    let p = projects();
+    let a = agents();
+    let active = p.as_array().map_or(0, |l| {
+        l.iter().filter(|p| !p["archived"].as_bool().unwrap_or(false) && p["week_agents"].as_u64().unwrap_or(0) > 0).count()
+    });
+    let list = a.as_array().cloned().unwrap_or_default();
+    let count = |s: &str| list.iter().filter(|a| a["status"] == s).count();
+    json!({
+        "type": "status",
+        "open": LIVE.with(|l| l.borrow().open),
+        "closed_at": stored("closed_at"),
+        "projects": active,
+        "agents": list.len(),
+        "working": count("working"),
+        "waiting": count("waiting"),
+    })
+}
+
+fn tell() {
+    LIVE.with(|l| l.borrow_mut().told = now());
+    host::settings_post(&status().to_string());
+}
+
+fn open_office() {
+    if let Err(e) = host::panel_open(PANEL) {
+        host::settings_post(&json!({ "type": "openFailed", "error": e }).to_string());
+    }
+}
+
+fn at_startup() -> bool {
+    serde_json::from_str::<Value>(&host::options()).ok().and_then(|o| o[AT_STARTUP].as_bool()).unwrap_or(true)
+}
+
+fn settings(message: &Value) {
+    match message["type"].as_str().unwrap_or("") {
+        "ready" => tell(),
+        "open" => open_office(),
+        _ => {}
+    }
 }
 
 fn page(message: &Value) {
@@ -250,6 +295,13 @@ impl Extension for Office {
             "started" => {
                 store("resume", &json!({ "at": now(), "within": RELOAD_MS }));
                 post(&json!({ "type": "reload" }));
+                if at_startup() {
+                    open_office();
+                }
+            }
+            "settings.message" => {
+                let v: Value = serde_json::from_str(&data).unwrap_or(Value::Null);
+                settings(&v["message"]);
             }
             "panel.message" => {
                 let v: Value = serde_json::from_str(&data).unwrap_or(Value::Null);
@@ -257,11 +309,16 @@ impl Extension for Office {
                     page(&v["message"]);
                 }
             }
-            "panel.closed" => LIVE.with(|l| {
-                let mut l = l.borrow_mut();
-                l.open = false;
-                l.closed_at = now();
-            }),
+            "panel.closed" => {
+                let t = now();
+                LIVE.with(|l| {
+                    let mut l = l.borrow_mut();
+                    l.open = false;
+                    l.closed_at = t;
+                });
+                store("closed_at", &json!(t));
+                tell();
+            }
             "timer" => {
                 if LIVE.with(|l| l.borrow().open) {
                     if LIVE.with(|l| std::mem::take(&mut l.borrow_mut().stale)) {
@@ -274,6 +331,9 @@ impl Extension for Office {
             _ => {
                 if LIVE.with(|l| l.borrow().open) {
                     relay(&name, &data);
+                }
+                if name.starts_with("agent.") && now().saturating_sub(LIVE.with(|l| l.borrow().told)) >= STATUS_CHECK_MS {
+                    tell();
                 }
             }
         }

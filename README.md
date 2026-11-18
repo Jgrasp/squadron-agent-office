@@ -4,7 +4,7 @@ A [Squadron](https://github.com/Jgrasp/squadron) extension that shows your agent
 
 ## Use
 
-Next to an agent, click **Agent Office** in its tools. The office opens in a floating window of its own, which you can move and resize and which keeps its size and place; clicking the button again brings it back to the front. It builds the office from your projects:
+The office opens in a floating window of its own when Squadron starts; you can move and resize it and it keeps its size and place. To open it again after closing it, or to bring it to the front, go to Settings › Extensions › Agent Office: **Open the office** sits under **Open when Squadron starts**, which you can turn off. It builds the office from your projects:
 
 - each project that had an agent over the last 7 days gets an office in its color, its name on a plate above the door. Its size follows the number of agents of the week: a booth for one, up to an open space from 20. Archived projects and projects without agents this week have none;
 - each group of projects fills one block of the building, sub-groups included. Small projects sometimes share an office;
@@ -25,7 +25,7 @@ Squadron hands the extension no conversation, prompt, tool input, folder or secr
 
 It runs no program and reaches no network. Its layouts, the camera and the selection stay in its own storage in Squadron.
 
-Needs Squadron 0.52.0 or later, the first release with extension API 1.7.
+Needs Squadron 0.53.0 or later, the first release with extension API 1.9.
 
 ## Build
 
