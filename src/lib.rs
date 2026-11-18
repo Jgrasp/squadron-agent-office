@@ -63,6 +63,7 @@ fn groups() -> Value {
 
 fn agents() -> Value {
     let list = host::all_agents().unwrap_or_default();
+    let unread = host::unread_agents().unwrap_or_default();
     Value::Array(
         list.into_iter()
             .filter(|a| !a.archived)
@@ -70,6 +71,7 @@ fn agents() -> Value {
                 json!({
                     "id": a.id, "project": a.project, "name": a.name, "status": a.status, "waiting": a.waiting,
                     "tool": a.tool, "error": a.error, "by": a.by, "archived": a.archived, "since": a.since,
+                    "unread": unread.contains(&a.id),
                 })
             })
             .collect(),

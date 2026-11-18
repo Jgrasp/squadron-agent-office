@@ -631,7 +631,7 @@ function newActor(ag) {
   return a;
 }
 function sync(a, ag) {
-  a.status = ag.status; a.name = nameOf(ag); a.tool = ag.tool || null; a.waitKind = ag.waiting || null; a.err = ag.status === 'error' || ag.error === 'mcp' ? ag.error || 'crash' : null;
+  a.status = ag.status; a.name = nameOf(ag); a.tool = ag.tool || null; a.waitKind = ag.waiting || null; a.unread = !!ag.unread; a.err = ag.status === 'error' || ag.error === 'mcp' ? ag.error || 'crash' : null;
   a.sad = !!PROJ[a.project]?.idle && !BUSY.includes(ag.status);
   a.tagKey = a.name + a.status;
 }
@@ -684,7 +684,7 @@ function drawTag(a) {
   a.drawn = a.tagKey;
   tagVis(a);
 }
-const flagged = (a) => a.status === 'waiting' || !!a.err;
+const flagged = (a) => a.status === 'waiting' || !!a.err || a.unread;
 function tagVis(a) {
   const near = cam.s >= 1.9;
   a.nt.alpha = +(flagged(a) && !a.path);
