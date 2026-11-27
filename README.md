@@ -1,6 +1,6 @@
 # Agent Office
 
-A [Squadron](https://github.com/Jgrasp/squadron) extension that shows your agents at work in an isometric office, live.
+A [Squadron](https://github.com/akki-team/squadron) extension that shows your agents at work in an isometric office, live.
 
 ## Use
 
