@@ -182,7 +182,7 @@ dependencies = [
 [[package]]
 name = "squadron_extension_api"
 version = "1.9.0"
-source = "git+https://github.com/Jgrasp/squadron-extensions#59d703e6274822a8f74d4bd73eebdcb7f1379876"
+source = "git+https://github.com/akki-team/squadron-extensions#59d703e6274822a8f74d4bd73eebdcb7f1379876"
 dependencies = [
  "serde",
  "serde_json",
